@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   User, Sparkles, Upload, Check,
-  TrendingUp, ArrowRight
+  TrendingUp, ArrowRight, Edit3, X, Save
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ScoreGauge } from '../components/ScoreGauge';
 import { JobCard } from '../components/JobCard';
 import { JobDetailsModal } from '../components/JobDetailsModal';
@@ -19,12 +20,58 @@ export const CandidateDashboard: React.FC<CandidateDashboardProps> = ({
   onOpenUpload,
   onExploreJobs,
 }) => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [recommendations, setRecommendations] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
+  // Profile Edit Modal State
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileHeadline, setProfileHeadline] = useState('');
+  const [profileBio, setProfileBio] = useState('');
+  const [profileLocation, setProfileLocation] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileEdu, setProfileEdu] = useState('');
+  const [profileExp, setProfileExp] = useState(1.0);
+  const [profileSkillsStr, setProfileSkillsStr] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const openProfileModal = () => {
+    const cp = user?.candidate_profile;
+    setProfileHeadline(cp?.headline || '');
+    setProfileBio(cp?.bio || '');
+    setProfileLocation(cp?.location || '');
+    setProfilePhone(cp?.phone || '');
+    setProfileEdu(cp?.education || '');
+    setProfileExp(cp?.experience_years || 1.0);
+    setProfileSkillsStr((cp?.skills || []).map((s) => s.name).join(', '));
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const skillsArray = profileSkillsStr.split(',').map((s) => s.trim()).filter(Boolean);
+      await api.auth.updateProfile({
+        headline: profileHeadline.trim(),
+        bio: profileBio.trim(),
+        location: profileLocation.trim(),
+        phone: profilePhone.trim(),
+        education: profileEdu.trim(),
+        experience_years: Number(profileExp),
+        skills: skillsArray,
+      });
+      await refreshUser();
+      setIsEditingProfile(false);
+    } catch (err: any) {
+      alert(err?.response?.data?.detail || 'Failed to update candidate profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -92,6 +139,13 @@ export const CandidateDashboard: React.FC<CandidateDashboardProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={openProfileModal}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-[#0B1220] border border-[#E5EAF0] text-xs font-bold transition-all shadow-xs"
+          >
+            <Edit3 className="w-4 h-4 text-teal-700" />
+            <span>Edit Profile</span>
+          </button>
           <button
             onClick={onOpenUpload}
             className="btn-shimmer flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-bold transition-all shadow-teal-glow"
@@ -307,6 +361,134 @@ export const CandidateDashboard: React.FC<CandidateDashboardProps> = ({
         onClose={() => setSelectedJob(null)}
         onApplied={loadDashboardData}
       />
+
+      {/* Candidate Profile Edit Modal */}
+      <AnimatePresence>
+        {isEditingProfile && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-xl bg-white border border-[#E5EAF0] rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl my-8 text-left"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-[#E5EAF0]">
+                <div className="flex items-center gap-2">
+                  <Edit3 className="w-4 h-4 text-teal-700" />
+                  <h3 className="text-lg font-bold text-[#0B1220]">Edit Candidate Profile</h3>
+                </div>
+                <button onClick={() => setIsEditingProfile(false)} className="text-slate-400 hover:text-[#0B1220]">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-[#0B1220] font-bold mb-1">Headline</label>
+                  <input
+                    type="text"
+                    required
+                    value={profileHeadline}
+                    onChange={(e) => setProfileHeadline(e.target.value)}
+                    placeholder="Senior AI & Machine Learning Engineer"
+                    className="w-full glass-input rounded-xl p-2.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#0B1220] font-bold mb-1">Professional Bio</label>
+                  <textarea
+                    rows={3}
+                    value={profileBio}
+                    onChange={(e) => setProfileBio(e.target.value)}
+                    placeholder="Brief overview of your technical achievements and focus areas..."
+                    className="w-full glass-input rounded-xl p-2.5 resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#0B1220] font-bold mb-1">Location</label>
+                    <input
+                      type="text"
+                      value={profileLocation}
+                      onChange={(e) => setProfileLocation(e.target.value)}
+                      placeholder="San Francisco, CA"
+                      className="w-full glass-input rounded-xl p-2.5"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#0B1220] font-bold mb-1">Phone Number</label>
+                    <input
+                      type="text"
+                      value={profilePhone}
+                      onChange={(e) => setProfilePhone(e.target.value)}
+                      placeholder="+1 (555) 234-5678"
+                      className="w-full glass-input rounded-xl p-2.5"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#0B1220] font-bold mb-1">Education</label>
+                    <input
+                      type="text"
+                      value={profileEdu}
+                      onChange={(e) => setProfileEdu(e.target.value)}
+                      placeholder="B.S. in Computer Science"
+                      className="w-full glass-input rounded-xl p-2.5"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#0B1220] font-bold mb-1">Years of Experience</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      max="40"
+                      value={profileExp}
+                      onChange={(e) => setProfileExp(parseFloat(e.target.value) || 0)}
+                      className="w-full glass-input rounded-xl p-2.5 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[#0B1220] font-bold mb-1">Skills (Comma-separated)</label>
+                  <input
+                    type="text"
+                    value={profileSkillsStr}
+                    onChange={(e) => setProfileSkillsStr(e.target.value)}
+                    placeholder="Python, PyTorch, FastAPI, React, Docker, AWS"
+                    className="w-full glass-input rounded-xl p-2.5 font-mono text-teal-800 font-bold"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-[#E5EAF0]">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingProfile(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-100 text-[#526071] hover:bg-slate-200 font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingProfile}
+                    className="btn-shimmer px-6 py-2 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white font-bold shadow-teal-glow flex items-center gap-1.5"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{savingProfile ? 'Saving...' : 'Save Profile'}</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

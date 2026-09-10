@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "sqlite:///./jobmatch.db"
+        "sqlite:////tmp/jobmatch.db" if os.getenv("VERCEL") else "sqlite:///./jobmatch.db"
     )
 
     SECRET_KEY: str = os.getenv(
@@ -27,7 +27,10 @@ class Settings(BaseSettings):
         "http://localhost:8000"
     ]
 
-    UPLOAD_DIR: str = "./uploads"
+    UPLOAD_DIR: str = os.getenv(
+        "UPLOAD_DIR",
+        "/tmp/uploads" if os.getenv("VERCEL") else "./uploads"
+    )
 
     class Config:
         env_file = ".env"

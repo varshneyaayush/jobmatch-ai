@@ -258,7 +258,7 @@ def seed_database(db: Session):
         },
         {
             "recruiter_id": recruiter_2.id,
-            "title": "Frontend Engineer — 3D & Creative UI",
+            "title": "Frontend Engineer - 3D & Creative UI",
             "company": "CloudSphere Systems",
             "location": "Austin, TX",
             "location_type": "On-site",
@@ -268,7 +268,7 @@ def seed_database(db: Session):
             "salary_min": 115000,
             "salary_max": 145000,
             "salary_currency": "USD",
-            "salary_text": "$115k – $145k / yr",
+            "salary_text": "$115k - $145k / yr",
             "featured": 0,
             "skills": ["JavaScript", "TypeScript", "React", "Three.js", "Tailwind CSS", "UI/UX Design"],
             "description": "Craft mesmerizing 3D data visualizations, interactive dashboard canvases, and smooth motion graphics using WebGL, Three.js, and React.",

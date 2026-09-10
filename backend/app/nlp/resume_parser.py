@@ -1,6 +1,6 @@
 import re
 import os
-import pymupdf as fitz
+import pymupdf
 import docx
 from typing import Dict, List, Any, Optional
 from app.nlp.skills_dataset import TECH_SKILLS_DATA, categorize_skill
@@ -11,7 +11,7 @@ class ResumeParser:
         """Extract clean plain text from PDF using PyMuPDF."""
         text = ""
         try:
-            doc = fitz.open(file_path)
+            doc = pymupdf.open(file_path)
             for page in doc:
                 text += page.get_text("text") + "\n"
             doc.close()

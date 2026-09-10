@@ -1,0 +1,27 @@
+
+Sophia Chen
+Full Stack Software Engineer
+Austin, TX | sophia.chen.dev@example.com | +1 (555) 876-5432 | github.com/sophiachen-dev
+
+SUMMARY
+Full Stack Engineer with 3+ years of experience crafting high-performance web applications using React, TypeScript, Node.js, and FastAPI. Deeply passionate about liquid-glass UI/UX design, Three.js 3D web graphics, and scalable distributed backend systems.
+
+TECHNICAL SKILLS
+- Frontend: JavaScript, TypeScript, React, Next.js, HTML5, CSS3, Tailwind CSS, Redux, Zustand, Three.js, UI/UX Design
+- Backend: Node.js, Express.js, FastAPI, Python, RESTful API, GraphQL, Microservices
+- Databases: PostgreSQL, MongoDB, Redis, SQLite, Supabase
+- DevOps & Tools: Docker, AWS, Git, CI/CD, Linux, Webpack, Vite, Unit Testing
+
+EXPERIENCE
+Full Stack Developer | CloudCraft Tech (2022 - Present)
+- Developed responsive web interfaces using React, TypeScript, and Tailwind CSS serving 300k monthly active users.
+- Built high-throughput microservices using FastAPI, Python, and PostgreSQL with sub-50ms p99 latency.
+- Integrated Redis caching layer reducing database read load by 65%.
+
+Software Engineer | Apex Interactive (2021 - 2022)
+- Built interactive 3D product visualizations using Three.js and WebGL.
+- Automated test coverage using Jest and Pytest with GitHub Actions CI/CD workflows.
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Texas at Austin | 2017 - 2021
