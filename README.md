@@ -3,6 +3,11 @@
 JobMatch AI is a production-grade, AI-powered Job Portal and Resume Matching Platform connecting job seekers with high-impact tech opportunities using real NLP/ML resume parsing, TF-IDF vectorization, Cosine Similarity, and dynamic skill ontology matching.
 
 ---
+## 🚀 Live Demo
+
+- 🌐 **Frontend:** https://jobmatch-ai-gaek.vercel.app/
+- ⚡ **Backend API:** https://jobmatch-ai-snowy.vercel.app/
+- ❤️ **API Health:** https://jobmatch-ai-snowy.vercel.app/api/health
 
 ## 🌟 Core Features
 
