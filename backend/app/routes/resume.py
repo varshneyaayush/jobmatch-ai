@@ -18,6 +18,55 @@ from app.utils.sample_resumes import SAMPLE_AI_ENGINEER_RESUME, SAMPLE_FULLSTACK
 
 router = APIRouter(prefix="/resume", tags=["Resume Processing"])
 
+
+@router.post("/upload-temp")
+async def upload_temp_resume(
+    file: UploadFile = File(...)
+):
+    """
+    Temporary resume upload for new user registration onboarding.
+    Saves file to disk and returns parsed summary preview + temporary file reference.
+    """
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in [".pdf", ".docx", ".doc", ".txt"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported format. Please upload a PDF or DOCX file."
+        )
+
+    unique_filename = f"temp_{uuid.uuid4().hex}_{file.filename}"
+    file_path = os.path.join(settings.UPLOAD_DIR, unique_filename)
+
+    async with aiofiles.open(file_path, "wb") as buffer:
+        content = await file.read()
+        if len(content) == 0:
+            raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+        await buffer.write(content)
+
+    parsed = ResumeParser.parse_full_resume(file_path)
+    if not parsed["raw_text"]:
+        raise HTTPException(status_code=422, detail="Unable to extract text from resume. Please ensure it is not scanned/password-protected.")
+
+    scoring_result = calculate_resume_score(parsed)
+    overall_score = scoring_result["overall_score"]
+
+    return {
+        "success": True,
+        "temp_resume_path": file_path,
+        "file_name": file.filename,
+        "score": overall_score,
+        "extracted_name": parsed.get("name"),
+        "extracted_email": parsed.get("email"),
+        "extracted_phone": parsed.get("phone"),
+        "education": parsed.get("education"),
+        "experience_years": parsed.get("experience_years"),
+        "skills": parsed.get("skills", []),
+        "skills_by_category": parsed.get("skills_by_category", {}),
+        "summary": parsed.get("summary"),
+        "strengths": scoring_result.get("strengths", []),
+        "improvements": scoring_result.get("improvements", []),
+    }
+
 @router.post("/upload")
 async def upload_resume(
     file: UploadFile = File(...),

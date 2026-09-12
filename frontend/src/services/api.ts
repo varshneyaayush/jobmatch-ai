@@ -25,6 +25,18 @@ export const api = {
       const res = await apiClient.post('/auth/register', data);
       return res.data;
     },
+    sendOtp: async (data: any) => {
+      const res = await apiClient.post('/auth/send-otp', data);
+      return res.data;
+    },
+    verifyOtp: async (data: any) => {
+      const res = await apiClient.post('/auth/verify-otp', data);
+      return res.data;
+    },
+    resendOtp: async (data: any) => {
+      const res = await apiClient.post('/auth/resend-otp', data);
+      return res.data;
+    },
     login: async (data: any) => {
       const res = await apiClient.post('/auth/login', data);
       return res.data;
@@ -44,6 +56,14 @@ export const api = {
   },
 
   resume: {
+    uploadTempResume: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await apiClient.post('/resume/upload-temp', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return res.data;
+    },
     uploadResume: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);

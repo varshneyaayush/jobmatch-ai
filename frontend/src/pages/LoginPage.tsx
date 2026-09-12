@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  X,
   Sparkles,
   User,
   Briefcase,
@@ -22,25 +21,17 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  defaultRole?: 'job_seeker' | 'recruiter' | 'admin';
-  initialMode?: 'login' | 'register';
+interface LoginPageProps {
+  onSuccessRedirect?: () => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  onClose,
-  defaultRole = 'job_seeker',
-  initialMode = 'login',
-}) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onSuccessRedirect }) => {
   const { login, demoLogin } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-  
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+
   // Registration Wizard Step: 1 = Details, 2 = Resume, 3 = Password, 4 = OTP Verification
   const [regStep, setRegStep] = useState<number>(1);
-  const [role, setRole] = useState<'job_seeker' | 'recruiter' | 'admin'>(defaultRole);
+  const [role, setRole] = useState<'job_seeker' | 'recruiter' | 'admin'>('job_seeker');
 
   // Form Fields
   const [name, setName] = useState('');
@@ -68,10 +59,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode, isOpen]);
-
-  useEffect(() => {
     let timer: any;
     if (cooldown > 0) {
       timer = setInterval(() => {
@@ -80,8 +67,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
     return () => clearInterval(timer);
   }, [cooldown]);
-
-  if (!isOpen) return null;
 
   const resetForm = () => {
     setRegStep(1);
@@ -112,7 +97,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         password,
       });
       login(res.access_token, res.user);
-      onClose();
+      if (onSuccessRedirect) onSuccessRedirect();
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Authentication failed. Please check your credentials.');
     } finally {
@@ -126,7 +111,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setError(null);
     try {
       await demoLogin(demoRole);
-      onClose();
+      if (onSuccessRedirect) onSuccessRedirect();
     } catch (err: any) {
       setError('Failed to log in with demo profile.');
     } finally {
@@ -195,7 +180,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       setSuccessMsg(res.message || `Verification code sent to ${email}.`);
       setCooldown(res.cooldown_seconds || 60);
-      setRegStep(4); // Move to OTP Step
+      setRegStep(4);
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Failed to send OTP verification email.');
     } finally {
@@ -237,7 +222,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       });
 
       login(res.access_token, res.user);
-      onClose();
+      if (onSuccessRedirect) onSuccessRedirect();
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Invalid or expired OTP code.');
     } finally {
@@ -246,15 +231,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+    <div className="min-h-screen bg-[#F7F9FC] text-[#0B1220] flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
+      {/* Background ambient lighting */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-teal-500/10 via-blue-500/5 to-transparent blur-3xl pointer-events-none" />
+
+      {/* Brand Header */}
+      <div className="mb-6 flex flex-col items-center space-y-2 z-10 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-600 to-blue-600 p-[1.5px] shadow-md flex items-center justify-center">
+          <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-teal-700" />
+          </div>
+        </div>
+        <h1 className="text-2xl font-extrabold tracking-tight text-[#0B1220] flex items-center gap-2">
+          JobMatch <span className="text-teal-700 font-mono text-xs uppercase px-2 py-0.5 rounded bg-teal-50 border border-teal-200">AI</span>
+        </h1>
+        <p className="text-xs text-slate-500 font-medium max-w-sm">
+          Intelligent AI-Powered Resume Matching & Career Platform
+        </p>
+      </div>
+
+      {/* Main Authentication Card */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="w-full max-w-md bg-white border border-[#E5EAF0] rounded-3xl shadow-2xl overflow-hidden relative text-left"
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-md bg-white border border-[#E5EAF0] rounded-3xl shadow-2xl overflow-hidden relative z-10 text-left"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5EAF0] bg-slate-50/70">
+        {/* Card Header */}
+        <div className="px-6 py-4 border-b border-[#E5EAF0] bg-slate-50/70 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-7 h-7 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-teal-700" />
@@ -263,18 +267,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {mode === 'login' ? 'Sign In to JobMatch AI' : 'Create JobMatch AI Account'}
             </span>
           </div>
-          <button
-            onClick={() => {
-              resetForm();
-              onClose();
-            }}
-            className="p-1 rounded-lg text-slate-400 hover:text-[#0B1220] hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
-        {/* Modal Body */}
+        {/* Card Body */}
         <div className="p-6 space-y-4">
           {error && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2">
@@ -290,9 +285,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* ======================================================== */}
           {/* RETURNING USER LOGIN MODE */}
-          {/* ======================================================== */}
           {mode === 'login' && (
             <div className="space-y-4">
               {/* 1-Click Instant Demo Login Buttons */}
@@ -384,7 +377,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </button>
               </form>
 
-              <div className="text-center pt-2">
+              <div className="text-center pt-2 border-t border-slate-100">
                 <button
                   onClick={() => {
                     setMode('register');
@@ -398,9 +391,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* ======================================================== */}
           {/* NEW USER MULTI-STEP REGISTRATION ONBOARDING FLOW */}
-          {/* ======================================================== */}
           {mode === 'register' && (
             <div className="space-y-4">
               {/* Step Progress Bar */}
@@ -442,9 +433,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 />
               </div>
 
-              {/* ---------------------------------------------------- */}
               {/* STEP 1: PERSONAL DETAILS */}
-              {/* ---------------------------------------------------- */}
               {regStep === 1 && (
                 <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-3.5">
                   <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
@@ -547,9 +536,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </motion.div>
               )}
 
-              {/* ---------------------------------------------------- */}
               {/* STEP 2: RESUME UPLOAD */}
-              {/* ---------------------------------------------------- */}
               {regStep === 2 && (
                 <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-3.5">
                   <div className="text-center space-y-1">
@@ -638,9 +625,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </motion.div>
               )}
 
-              {/* ---------------------------------------------------- */}
-              {/* STEP 3: CREATE PASSWORD & SEND SMTP OTP */}
-              {/* ---------------------------------------------------- */}
+              {/* STEP 3: CREATE PASSWORD */}
               {regStep === 3 && (
                 <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-3.5">
                   <form onSubmit={handleSendOtp} className="space-y-3.5">
@@ -710,9 +695,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </motion.div>
               )}
 
-              {/* ---------------------------------------------------- */}
-              {/* STEP 4: REAL EMAIL OTP VERIFICATION */}
-              {/* ---------------------------------------------------- */}
+              {/* STEP 4: OTP VERIFICATION */}
               {regStep === 4 && (
                 <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                   <div className="text-center space-y-1">
@@ -754,7 +737,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </button>
                   </form>
 
-                  {/* Resend Controls */}
                   <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
                     <span className="text-slate-500">Didn't receive the code?</span>
                     <button
@@ -781,7 +763,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </motion.div>
               )}
 
-              {/* Bottom switch to Sign In */}
               <div className="text-center pt-2 border-t border-slate-100">
                 <button
                   onClick={() => {

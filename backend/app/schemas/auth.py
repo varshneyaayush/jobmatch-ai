@@ -19,3 +19,21 @@ class TokenResponse(BaseModel):
 
 class DemoLoginRequest(BaseModel):
     role: str  # "job_seeker", "recruiter", "admin"
+
+class SendOTPRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: str = "job_seeker"
+    company_name: Optional[str] = None
+    phone: Optional[str] = None
+    temp_resume_path: Optional[str] = None
+    temp_resume_name: Optional[str] = None
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+
+class ResendOTPRequest(BaseModel):
+    email: EmailStr
+

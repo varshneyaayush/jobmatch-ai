@@ -1,15 +1,25 @@
 import os
 from pydantic_settings import BaseSettings
 from typing import List
+from dotenv import load_dotenv
+
+# Load env variables from backend/.env or backend/app/.env if present
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+load_dotenv()
+
+db_url = os.getenv(
+    "DATABASE_URL",
+    "sqlite:////tmp/jobmatch.db" if os.getenv("VERCEL") else "sqlite:///./jobmatch.db"
+)
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "JobMatch AI"
 
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        "sqlite:////tmp/jobmatch.db" if os.getenv("VERCEL") else "sqlite:///./jobmatch.db"
-    )
+    DATABASE_URL: str = db_url
 
     SECRET_KEY: str = os.getenv(
         "SECRET_KEY",
@@ -32,6 +42,14 @@ class Settings(BaseSettings):
         "/tmp/uploads" if os.getenv("VERCEL") else "./uploads"
     )
 
+    # SMTP Configuration
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "noreply@jobmatch.ai")
+    SMTP_USE_TLS: bool = os.getenv("SMTP_USE_TLS", "True").lower() in ("true", "1", "yes")
+
     class Config:
         env_file = ".env"
         extra = "allow"
@@ -39,4 +57,4 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

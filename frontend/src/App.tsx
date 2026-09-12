@@ -7,21 +7,43 @@ import { FindJobsPage } from './pages/FindJobsPage';
 import { CandidateDashboard } from './pages/CandidateDashboard';
 import { RecruiterDashboard } from './pages/RecruiterDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { LoginPage } from './pages/LoginPage';
 import { ResumeUploadModal } from './components/ResumeUploadModal';
 import { AuthModal } from './components/AuthModal';
+import { Sparkles } from 'lucide-react';
 
 function MainLayout() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authRole, setAuthRole] = useState<'job_seeker' | 'recruiter' | 'admin'>('job_seeker');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
-  const handleOpenAuth = (role: 'job_seeker' | 'recruiter' | 'admin' = 'job_seeker') => {
+  const handleOpenAuth = (role: 'job_seeker' | 'recruiter' | 'admin' = 'job_seeker', mode: 'login' | 'register' = 'login') => {
     setAuthRole(role);
+    setAuthMode(mode);
     setAuthModalOpen(true);
   };
 
+  // 1. Initial Authentication Loading State
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F7F9FC] flex flex-col items-center justify-center space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center animate-pulse">
+          <Sparkles className="w-6 h-6 text-teal-700 animate-spin" />
+        </div>
+        <span className="text-xs font-bold text-[#0B1220] tracking-wide font-mono">Loading JobMatch AI...</span>
+      </div>
+    );
+  }
+
+  // 2. Strict Authentication Protection: If not logged in, ALWAYS show Login Page first
+  if (!isAuthenticated) {
+    return <LoginPage onSuccessRedirect={() => setActiveTab('home')} />;
+  }
+
+  // 3. Authenticated User Layout (Redirects to Existing Landing Page / Active Tab)
   const renderContent = () => {
     switch (activeTab) {
       case 'jobs':
@@ -43,7 +65,7 @@ function MainLayout() {
       case 'admin-dashboard':
         return <AdminDashboard />;
       case 'recruiter':
-        if (isAuthenticated && user?.role === 'recruiter') {
+        if (user?.role === 'recruiter') {
           return <RecruiterDashboard />;
         }
         return (
@@ -85,7 +107,7 @@ function MainLayout() {
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         onSuccess={() => {
-          if (isAuthenticated && user?.role === 'job_seeker') {
+          if (user?.role === 'job_seeker') {
             setActiveTab('candidate-dashboard');
           } else {
             setActiveTab('jobs');
@@ -97,6 +119,7 @@ function MainLayout() {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultRole={authRole}
+        initialMode={authMode}
       />
     </div>
   );
